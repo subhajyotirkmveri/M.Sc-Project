@@ -9,19 +9,24 @@ from skimage import transform as tf
 def crop_image(image, detector, predictor):
     # image = cv2.imread(image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    rects = detector(gray, 1)
+    rects = detector(gray, 1) #This line detects faces in the grayscale image using the specified face detector (detector). The 1 parameter specifies that the image should be scaled by a factor of 1, 
+                             #which means no scaling.
     for (i, rect) in enumerate(rects):
+    
         shape = predictor(gray, rect)
-        shape = shape_to_np(shape)
+        shape = shape_to_np(shape)  
+ """These lines predict facial landmarks (shape) using the specified facial landmark predictor (predictor). The shape_to_np function converts the predicted shape to a NumPy array for easier manipulation."""
         (x, y, w, h) = rect_to_bb(rect)
         center_x = x + int(0.5 * w)
         center_y = y + int(0.5 * h)
         r = int(0.64 * h)
         new_x = center_x - r
         new_y = center_y - r
+        
+"""These lines calculate the new coordinates and size of the square region to be cropped around the center of the detected face. The value 0.64 is used to determine the size of the cropped region relative to the height of the face rectangle."""
         roi = image[new_y:new_y + 2 * r, new_x:new_x + 2 * r]
 
-        roi = cv2.resize(roi, (163,163), interpolation = cv2.INTER_AREA)
+        roi = cv2.resize(roi, (163,163), interpolation = cv2.INTER_AREA) #This line resizes the cropped region (roi) to a fixed size of 163x163 pixels using bilinear interpolation.
         scale =  163. / (2 * r)
 
         shape = ((shape - np.array([new_x,new_y])) * scale)
@@ -46,7 +51,7 @@ class FaceAligner:
     def align(self, image, gray, rect, shape, scale=None):
         # convert the landmark (x, y)-coordinates to a NumPy array
         # shape = self.predictor(gray, rect)
-        shape = shape_to_np(shape)
+        shape = shape_to_np(shape) #This line converts the provided facial landmarks to a NumPy array using the shape_to_np function, which converts the landmarks to a more manageable format.
         
         #simple hack ;)
         if (len(shape)==68):
@@ -95,11 +100,11 @@ class FaceAligner:
         tX = self.desiredFaceWidth * 0.5
         tY = self.desiredFaceHeight * self.desiredLeftEye[1]
         M[0, 2] += (tX - eyesCenter[0])
-        M[1, 2] += (tY - eyesCenter[1])
+        M[1, 2] += (tY - eyesCenter[1])#These lines update the translation component of the rotation matrix to ensure that the eyes are positioned correctly within the output face.
 
         # apply the affine transformation
-        (w, h) = (self.desiredFaceWidth, self.desiredFaceHeight)
-        output = cv2.warpAffine(image, M, (w, h),
+        (w, h) = (self.desiredFaceWidth, self.desiredFaceHeight) 
+        output = cv2.warpAffine(image, M, (w, h), #This line applies the affine transformation (rotation, scaling, and translation) to the input image to align the face.
             flags=cv2.INTER_CUBIC)
 
         # return the aligned face
@@ -109,7 +114,7 @@ class FaceAligner:
         left_eye = [40, 39]
         right_eye = [42, 47]
         nose = [30, 31, 32, 33, 34, 35]
-
+"""These lines define lists containing the indices of the facial landmarks corresponding to the left eye, right eye, and nose, respectively."""
         leftEyeCenter = mean_shape[left_eye, :].mean(axis=0)
         rightEyeCenter = mean_shape[right_eye, :].mean(axis=0)
         noseCenter = mean_shape[nose, :].mean(axis=0)

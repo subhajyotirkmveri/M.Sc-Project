@@ -37,6 +37,11 @@ other = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], \
 
 faceLmarkLookup = Mouth + Nose + leftBrow + rightBrow + leftEye + rightEye + other
 
+"""These lines define lists of pairs of indices representing different facial landmark regions.
+For example, Mouth represents the indices of points forming the mouth contour.
+Similarly, Nose, leftBrow, rightBrow, leftEye, rightEye, and other represent the indices of points forming their respective facial regions.
+faceLmarkLookup concatenates all these lists to create a lookup list containing all facial landmark indices."""
+
 def write_video_cv(frames, speech, fs, path, fname, fps):
     # fname = os.path.splitext(fname)[0]
     print(os.path.join(path, fname))
@@ -53,6 +58,10 @@ def write_video_cv(frames, speech, fs, path, fname, fps):
     librosa.output.write_wav(os.path.join(path, fname+'.wav'), speech, fs)
 
     cmd = 'ffmpeg -i '+os.path.join(path, fname)+' -i '+os.path.join(path, fname)+'.wav -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0  '+os.path.join(path, fname)+'_.mp4'
+    
+"""FFmpeg command is constructed to mux (combine) the video file (os.path.join(path, fname)) and audio file (os.path.join(path, fname+'.wav')) into an MP4 file.
+The subprocess module is used to execute this FFmpeg command."""
+
     subprocess.call(cmd, shell=True) 
     print('Muxing Done')
 
